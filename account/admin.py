@@ -6,12 +6,13 @@ from django.contrib.auth.models import Group
 
 class UserAuthAdmin(UserAdmin):
     model = UserAuth
-    list_display = ('full_name', 'email', 'phone_number', 'role', 'is_active')
-    search_fields = ('full_name','email','phone_number')
+    list_display = ('email', 'phone_number', 'role', 'is_active')
+    search_fields = ('email','phone_number')
+    ordering = ('email',)
 
     fieldsets = (
         ('Login Credentials', {'fields': ('email','phone_number', 'password')}),
-        ('Personal Info', {'fields': ('full_name', 'image')}),
+        ('Personal Info', {'fields': ('image',)}),
         ('Role & Permissions', {'fields': ('role', 'is_active', 'is_staff', 'is_superuser')}),
         ('OTP', {'fields': ('otp', 'otp_expired')}),
     )
@@ -19,7 +20,7 @@ class UserAuthAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'full_name', 'role', 'password1', 'password2', 'is_active', 'is_staff', 'is_superuser')
+            'fields': ('email', 'role', 'password1', 'password2', 'is_active', 'is_staff', 'is_superuser')
         }),
     )
     
