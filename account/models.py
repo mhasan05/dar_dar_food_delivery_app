@@ -14,6 +14,7 @@ class UserAuth(AbstractBaseUser, PermissionsMixin):
         USER = 'User', 'User'
         VENDOR = 'Vendor', 'Vendor'
         RIDER = 'Rider', 'Rider'
+    full_name = models.CharField(max_length=100, null=True, blank=True)
     email = models.EmailField(max_length=100, unique=True)
     phone_number = models.CharField(max_length=15, unique=True)
     role = models.CharField(max_length=20, choices=Roles.choices, default=Roles.USER)
@@ -41,7 +42,6 @@ class UserAuth(AbstractBaseUser, PermissionsMixin):
 
 
 class UserProfile(UserAuth):
-    full_name = models.CharField(max_length=100)
     image = models.ImageField(upload_to='images/', null=True, blank=True)
     address = models.TextField(null=True, blank=True)
 

@@ -15,8 +15,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,include
+from django.conf.urls import handler404, handler500
+from utils.common_function import custom_error
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/v1/auth/', include('account.urls')),
 ]
+
+
+# Hook in the custom error handler for 404 and 500 errors
+handler404 = custom_error
+handler500 = custom_error
