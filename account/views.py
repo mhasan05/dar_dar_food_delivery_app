@@ -22,18 +22,21 @@ class LoginView(APIView):
         if not email or not password:
             return Response({"status":"error","message": "Email and password are required."}, status=400)
 
-        user = authenticate(email=email, password=password)
+        user = authenticate(email=email.lower(), password=password)
         if not user:
             return Response({"status":"error","message": "Invalid email or password."}, status=400)
         if not user.is_active:
             return Response({"status":"error","message": "Account not verified. Please verify OTP."}, status=403)
         tokens = user_token(user)
         data = {}
-        if user.role == "Admin":
+        
+        if str(user.role).upper() == "USER":
             data = {"email": user.email, "phone_number": user.phone_number, "role": user.role}
-        if user.role == "Vendor":
+        elif str(user.role).upper() == "RIDER":
             data = {"email": user.email, "phone_number": user.phone_number, "role": user.role}
-        if user.role == "Rider":
+        elif str(user.role).upper() == "VENDOR":
+            data = {"email": user.email, "phone_number": user.phone_number, "role": user.role}
+        elif str(user.role).upper() == "ADMIN":
             data = {"email": user.email, "phone_number": user.phone_number, "role": user.role}
         return Response({
             "status":"success",
@@ -46,38 +49,33 @@ class LoginView(APIView):
 
 class SignupView(APIView):
     def post(self, request):
-        # Extract data from the request
         full_name = request.data.get('full_name')
         email = request.data.get('email')
         phone_number = request.data.get('phone_number')
+        role = request.data.get('role')
         password = request.data.get('password')
         confirm_password = request.data.get('confirm_password')
 
-        # Validate passwords
         if password != confirm_password:
             return Response({"status": "error", "message": "Passwords do not match."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Ensure email and password are provided
         if not email or not password:
             return Response({"status": "error", "message": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Validate password strength
         try:
             validate_password(password)
         except ValidationError as e:
             return Response({"status": "error", "message": f"Password error: {', '.join(e.messages)}"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if email or phone number already exists
-        if UserAuth.objects.filter(email=email).exists():
+        if UserAuth.objects.filter(email=email.lower()).exists():
             return Response({"status": "error", "message": "Email already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
         if UserAuth.objects.filter(phone_number=phone_number).exists():
             return Response({"status": "error", "message": "Phone number already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create the user in a transaction
         try:
             with transaction.atomic():
-                user = UserAuth.objects.create_user(full_name=full_name, email=email, phone_number=phone_number, password=password)
+                user = UserAuth.objects.create_user(full_name=full_name, email=email.lower(),role=role.upper(), phone_number=phone_number, password=password)
                 user.save()
             sent_email = send_otp(user)
 
