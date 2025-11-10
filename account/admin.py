@@ -12,6 +12,7 @@ class UserAuthAdmin(UserAdmin):
 
     fieldsets = (
         ('Login Credentials', {'fields': ('email','phone_number', 'password')}),
+        ('Personal Info', {'fields': ('full_name','image')}),
         ('Role & Permissions', {'fields': ('role', 'is_active','is_approved', 'is_staff', 'is_superuser')}),
         ('OTP', {'fields': ('otp', 'otp_expired')}),
     )
@@ -37,7 +38,7 @@ class UserProfileAdmin(UserAdmin):
 
     fieldsets = (
         ('Login Credentials', {'fields': ('email','phone_number', 'password')}),
-        ('Personal Info', {'fields': ('image','address')}),
+        ('Personal Info', {'fields': ('full_name','address')}),
         ('Role & Permissions', {'fields': ('role', 'is_active')}),
         ('OTP', {'fields': ('otp', 'otp_expired')}),
     )
@@ -45,7 +46,7 @@ class UserProfileAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email','phone_number', 'role','image','address', 'password1', 'password2', 'is_active')
+            'fields': ('full_name','email','phone_number', 'role','address', 'password1', 'password2', 'is_active')
         }),
     )
     
@@ -62,8 +63,9 @@ class RiderProfileAdmin(UserAdmin):
 
     fieldsets = (
         ('Login Credentials', {'fields': ('email','phone_number', 'password')}),
-        ('Personal Info', {'fields': ('image','rating')}),
+        ('Personal Info', {'fields': ('full_name','rating')}),
         ('Vehicle Info', {'fields': ('vehicle_type', 'license_number', 'vehicle_plate','availability_status')}),
+        ('Bank Info', {'fields': ('bank_name','account_name','account_number','branch')}),
         ('Role & Permissions', {'fields': ('role', 'is_active')}),
         ('OTP', {'fields': ('otp', 'otp_expired')}),
     )
@@ -71,7 +73,7 @@ class RiderProfileAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email','phone_number', 'role','image','rating','vehicle_type', 'license_number', 'vehicle_plate','availability_status', 'password1', 'password2', 'is_active')
+            'fields': ('full_name','email','phone_number', 'role','rating','vehicle_type', 'license_number', 'vehicle_plate','availability_status','bank_name','account_name','account_number','branch', 'password1', 'password2', 'is_active')
         }),
     )
     
@@ -88,7 +90,8 @@ class VendorProfileAdmin(UserAdmin):
 
     fieldsets = (
         ('Login Credentials', {'fields': ('email','phone_number', 'password')}),
-        ('Personal Info', {'fields': ('image','shop_name','shop_type','shop_address','rating','bank_name','account_name','account_number','branch')}),
+        ('Personal Info', {'fields': ('full_name','shop_name','shop_type','shop_address','rating')}),
+        ('Bank Info', {'fields': ('bank_name','account_name','account_number','branch')}),
         ('Role & Permissions', {'fields': ('role', 'is_active')}),
         ('OTP', {'fields': ('otp', 'otp_expired')}),
     )
@@ -96,7 +99,7 @@ class VendorProfileAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email','phone_number', 'role','image','shop_name','shop_type','shop_address','rating','bank_name','account_name','account_number','branch', 'password1', 'password2', 'is_active')
+            'fields': ('full_name','email','phone_number', 'role','shop_name','shop_type','shop_address','rating','bank_name','account_name','account_number','branch', 'password1', 'password2', 'is_active')
         }),
     )
     

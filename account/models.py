@@ -17,6 +17,7 @@ class UserAuth(AbstractBaseUser, PermissionsMixin):
     full_name = models.CharField(max_length=100, null=True, blank=True)
     email = models.EmailField(max_length=100, unique=True)
     phone_number = models.CharField(max_length=15, unique=True)
+    image = models.ImageField(upload_to='images/', null=True, blank=True)
     role = models.CharField(max_length=20, choices=Roles.choices, default=Roles.USER)
     otp = models.CharField(max_length=6, null=True, blank=True)
     otp_expired = models.DateTimeField(null=True, blank=True)
@@ -44,7 +45,6 @@ class UserAuth(AbstractBaseUser, PermissionsMixin):
 
 
 class UserProfile(UserAuth):
-    image = models.ImageField(upload_to='images/', null=True, blank=True)
     address = models.TextField(null=True, blank=True)
 
     class Meta:
@@ -53,16 +53,17 @@ class UserProfile(UserAuth):
 
 
 class VendorProfile(UserAuth):
-    image = models.ImageField(upload_to='images/', null=True, blank=True)
-    shop_name = models.CharField(max_length=150)
-    shop_type = models.CharField(max_length=100)
+    shop_name = models.CharField(max_length=150, blank=True)
+    shop_image = models.ImageField(upload_to='shop_image/', null=True, blank=True)
+    shop_license = models.ImageField(upload_to='shop_license/', null=True, blank=True)
+    shop_type = models.CharField(max_length=100, blank=True)
     shop_address = models.TextField(null=True, blank=True)
     rating = models.FloatField(default=0)
 
-    bank_name = models.CharField(max_length=100)
-    account_name = models.CharField(max_length=100)
-    account_number = models.CharField(max_length=100)
-    branch = models.CharField(max_length=100)
+    bank_name = models.CharField(max_length=100, blank=True)
+    account_name = models.CharField(max_length=100, blank=True)
+    account_number = models.CharField(max_length=100, blank=True)
+    branch = models.CharField(max_length=100, blank=True)
 
     class Meta:
         verbose_name_plural = "Vendor Profile"
@@ -70,11 +71,16 @@ class VendorProfile(UserAuth):
 
 
 class RiderProfile(UserAuth):
-    image = models.ImageField(upload_to='images/', null=True, blank=True)
     rating = models.FloatField(default=0)
-    vehicle_type = models.CharField(max_length=50)
-    license_number = models.CharField(max_length=100)
-    vehicle_plate = models.CharField(max_length=50)
+    vehicle_type = models.CharField(max_length=50, blank=True)
+    license_number = models.CharField(max_length=100, blank=True)
+    vehicle_plate = models.CharField(max_length=50, blank=True)
+
+    bank_name = models.CharField(max_length=100, blank=True)
+    account_name = models.CharField(max_length=100, blank=True)
+    account_number = models.CharField(max_length=100, blank=True)
+    branch = models.CharField(max_length=100, blank=True)
+
     availability_status = models.BooleanField(default=True)
 
     class Meta:
