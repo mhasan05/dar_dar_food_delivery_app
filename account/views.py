@@ -30,22 +30,30 @@ class LoginView(APIView):
             return Response({"status":"error","message": "Invalid email or password."}, status=400)
         if not user.is_active:
             return Response({"status":"error","message": "Account not verified. Please verify OTP."}, status=403)
+        
+        if str(user.role).upper() != "USER":
+            if not user.is_approved:
+                return Response({"status":"error","message": "Account not approved. Please wait for approval."}, status=403)
+
         tokens = user_token(user)
-        data = {}
         
         if str(user.role).upper() == "USER":
-            data = {"email": user.email, "phone_number": user.phone_number, "role": user.role}
+            user = UserProfile.objects.filter(email=user.email).first()
+            serializers = UserProfileSerializer(user)
         elif str(user.role).upper() == "RIDER":
-            data = {"email": user.email, "phone_number": user.phone_number, "role": user.role}
+            user = RiderProfile.objects.filter(email=user.email).first()
+            serializers = RiderProfileSerializer(user)
         elif str(user.role).upper() == "VENDOR":
-            data = {"email": user.email, "phone_number": user.phone_number, "role": user.role}
+            user = VendorProfile.objects.filter(email=user.email).first()
+            serializers = VendorProfileSerializer(user)
         elif str(user.role).upper() == "ADMIN":
-            data = {"email": user.email, "phone_number": user.phone_number, "role": user.role}
+            user = UserAuth.objects.filter(email=user.email).first()
+            serializers = AdminProfileSerializer(user)
         return Response({
             "status":"success",
             "message": "Login successful.",
             "access_token": tokens,
-            "data": data
+            "data": serializers.data
         }, status=200)
 
 class SignupView(APIView):
@@ -79,7 +87,7 @@ class SignupView(APIView):
         try:
             with transaction.atomic():
                 if role.upper() == "USER":
-                    user = UserProfile.objects.create_user(full_name=full_name, email=email.lower(),role=role.upper(), phone_number=phone_number, password=password)
+                    user = UserProfile.objects.create_user(full_name=full_name, email=email.lower(),role=role.upper(), phone_number=phone_number, password=password,is_approved=True)
                     user.save()
                 elif role.upper() == "RIDER":
                     user = RiderProfile.objects.create_user(full_name=full_name, email=email.lower(),role=role.upper(), phone_number=phone_number, password=password)
@@ -176,7 +184,6 @@ class ChangePasswordView(APIView):
         user.save()
         return Response({"status":"success","message": "Password changed successfully."}, status=200)
 
-
 class ResendOTPView(APIView):
     """
     Allows users to request a new OTP if the previous one expired or they didn’t receive it.
@@ -196,7 +203,6 @@ class ResendOTPView(APIView):
             {"status":"success","message": "A new OTP has been sent to your email."},
             status=status.HTTP_200_OK
         )
-
 
 class UserProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -223,13 +229,16 @@ class UserProfileView(APIView):
         else:
             return Response({"status":"error","message": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-
-
 class UpdateUserProfile(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def patch(self, request):
-        user = request.user
+    def patch(self, request,pk=None):
+        if pk:
+            user = UserAuth.objects.filter(pk=pk).first()
+            if not user:
+                return Response({"status":"error","message": "User not found."}, status=404)
+        else:
+            user = request.user
         data = request.data
         update_fields=[]
 
@@ -241,6 +250,7 @@ class UpdateUserProfile(APIView):
                 user.phone_number = data.get('phone_number')
                 update_fields.append('phone_number')
             user.save(update_fields=update_fields)
+            serializers = AdminProfileSerializer(user)
         
         elif str(user.role).upper() == 'USER':
             user = UserProfile.objects.filter(email=user.email).first()
@@ -257,6 +267,7 @@ class UpdateUserProfile(APIView):
                 user.address = data.get('address')
                 update_fields.append('address')
             user.save(update_fields=update_fields)
+            serializers = UserProfileSerializer(user)
 
         elif str(user.role).upper() == 'VENDOR':
             user = VendorProfile.objects.filter(email=user.email).first()
@@ -297,6 +308,7 @@ class UpdateUserProfile(APIView):
                 user.branch = data.get('branch')
                 update_fields.append('branch')
             user.save(update_fields=update_fields)
+            serializers = VendorProfileSerializer(user)
 
         elif str(user.role).upper() == 'RIDER':
             user = RiderProfile.objects.filter(email=user.email).first()
@@ -325,10 +337,41 @@ class UpdateUserProfile(APIView):
                 user.availability_status = data.get('availability_status')
                 update_fields.append('availability_status')
             user.save(update_fields=update_fields)
+            serializers = RiderProfileSerializer(user)
 
         
 
         return Response(
-            {"status": "success", "message": "Profile updated successfully."},
+            {"status": "success", "message": "Profile updated successfully.", "data": serializers.data},
             status=status.HTTP_200_OK
         )
+
+class DeleteUserView(APIView):
+    def delete(self, request,pk=None):
+        user = UserAuth.objects.filter(pk=pk).first()
+        if not user:
+            return Response({"status":"error","message": "User not found."}, status=404)
+        user.delete()
+        return Response({"status":"success","message": "User deleted successfully."}, status=200)
+
+
+class AllUserListView(APIView):
+    def get(self, request):
+        users = UserAuth.objects.all()
+        combined_data = []
+        for user in users:
+            if str(user.role).upper() == 'VENDOR':
+                combined_data.append(VendorProfile.objects.get(email=user.email))
+            elif str(user.role).upper() == 'USER':
+                combined_data.append(UserProfile.objects.get(email=user.email))
+            elif str(user.role).upper() == 'RIDER':
+                combined_data.append(RiderProfile.objects.get(email=user.email))
+            else:
+                pass
+        
+        serializer = CombinedUserSerializer(combined_data, many=True)
+        return Response({
+            "status": "success",
+            "message": "All users fetched successfully.",
+            "data": serializer.data
+        }, status=200)
