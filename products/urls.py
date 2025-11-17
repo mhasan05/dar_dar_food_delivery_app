@@ -1,6 +1,6 @@
 from django.urls import path
-from account.views import *
+from products.views import *
 
 urlpatterns = [
-    path('product/', UpdateUserProfile.as_view(), name='product'),
+    path('product/', AddProductView.as_view(), name='product'),
 ]

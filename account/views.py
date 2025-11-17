@@ -16,7 +16,7 @@ from .serializers import *
 logger = logging.getLogger(__name__)
 
 #User Auth Views Start
-
+32446
 class LoginView(APIView):
     def post(self, request):
         email = request.data.get('email')
