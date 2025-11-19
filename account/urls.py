@@ -21,4 +21,8 @@ urlpatterns = [
     path('update_profile/<int:pk>/', UpdateUserProfile.as_view(), name='update_profile'),
     path('all_users/', AllUserListView.as_view(), name='all_users'),
     path('delete_user/<int:pk>/', DeleteUserView.as_view(), name='delete_user'),
+
+
+    path('all_shop/', AllShopListView.as_view(), name='all_shop'),
+    path('shop/search/', SearchShopView.as_view(), name='search-shop'),
 ]

@@ -1,18 +1,49 @@
 from rest_framework import serializers
-from .models import Product, Category
+from .models import *
+from account.serializers import *
 
+# Category Serializer
+class CategorySerializer(serializers.ModelSerializer):
+    # vendor_info = VendorProfileSerializer(source='vendor', read_only=True)
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+# SubCategory Serializer
+class SubCategorySerializer(serializers.ModelSerializer):
+    # vendor_info = VendorProfileSerializer(source='vendor', read_only=True)
+    # category = CategorySerializer(read_only=True)  # Nested category data
+    category_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SubCategory
+        fields = ['id','name','image','vendor','category','category_name']
+
+    def get_category_name(self, obj):
+        return obj.category.name if obj.category else None
+
+# Product Serializer
 class ProductSerializer(serializers.ModelSerializer):
-    category = serializers.StringRelatedField()
+    # category = CategorySerializer(read_only=True)  # Nested category data
+    # subcategory = SubCategorySerializer(read_only=True)  # Nested subcategory data
+    # vendor_info = serializers.StringRelatedField(source='vendor', read_only=True)  # Vendor info
+    shop_name = serializers.SerializerMethodField()
+    shop_image = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
-        fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at']
-    def validate_price(self, value):
-        # Ensure price is not negative
-        if value < 0:
-            raise serializers.ValidationError("Price must be a positive number.")
-        return value
-    def validate_rating(self, value):
-        if value < 0 or value > 5:
-            raise serializers.ValidationError("Rating must be between 0 and 5.")
-        return value
+        fields = ['id','name','description','shop_name','shop_image','category','subcategory','image_1','image_2','image_3','currency','price','quantity','delivery_fee','created_at','updated_at','vendor']
+
+    def get_shop_name(self, obj):
+        return obj.vendor.shop_name if obj.vendor else None
+
+    def get_shop_image(self, obj):
+        # Fetch the shop image from the related VendorProfile
+        return obj.vendor.shop_image.url if obj.vendor and obj.vendor.shop_image else None
+
+
+class ShopSubCategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SubCategory
+        fields = ['id','name','vendor']

@@ -31,10 +31,10 @@ def send_otp(user):
             msg.attach_alternative(html_content, "text/html")
             msg.send()
 
-        return True
+        return True, otp
     except Exception as e:
         logger.error(f"Error while sending OTP: {str(e)}")
-        return False
+        return False, otp
 
     
 

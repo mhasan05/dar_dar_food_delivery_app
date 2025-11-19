@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
 from utils.common_function import user_token
 from utils.db import DB
@@ -13,10 +14,10 @@ from rest_framework import status,permissions
 from utils.common_function import send_otp
 from django.utils import timezone
 from .serializers import *
+
 logger = logging.getLogger(__name__)
 
 #User Auth Views Start
-32446
 class LoginView(APIView):
     def post(self, request):
         email = request.data.get('email')
@@ -71,10 +72,10 @@ class SignupView(APIView):
         if not email or not password:
             return Response({"status": "error", "message": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            validate_password(password)
-        except ValidationError as e:
-            return Response({"status": "error", "message": f"Password error: {', '.join(e.messages)}"}, status=status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     validate_password(password)
+        # except ValidationError as e:
+        #     return Response({"status": "error", "message": f"Password error: {', '.join(e.messages)}"}, status=status.HTTP_400_BAD_REQUEST)
 
         if UserAuth.objects.filter(email=email.lower()).exists():
             return Response({"status": "error", "message": "Email already exists."}, status=status.HTTP_400_BAD_REQUEST)
@@ -95,12 +96,12 @@ class SignupView(APIView):
                 elif role.upper() == "VENDOR":
                     user = VendorProfile.objects.create_user(full_name=full_name, email=email.lower(),role=role.upper(), phone_number=phone_number, password=password)
                     user.save()
-            sent_email = send_otp(user)
+            sent_email,otp = send_otp(user)
 
             if not sent_email:
                 return Response({"status": "error", "message": "Something went wrong, please try again later."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            return Response({"status": "success", "message": "Account created successfully. Please verify your email."}, status=status.HTTP_201_CREATED)
+            return Response({"status": "success", "message": "Account created successfully. Please verify your email.", "otp": otp}, status=status.HTTP_201_CREATED)
 
         except Exception as e:
             logger.error(f"Error creating user: {str(e)}")
@@ -126,7 +127,19 @@ class VerifyOTPView(APIView):
         user.otp_expired = None
         user.save()
         tokens = user_token(user)
-        return Response({"status":"success","message": "Account verified successfully.","access_token":tokens}, status=200)
+        if str(user.role).upper() == "USER":
+            user = UserProfile.objects.filter(email=user.email).first()
+            serializers = UserProfileSerializer(user)
+        elif str(user.role).upper() == "RIDER":
+            user = RiderProfile.objects.filter(email=user.email).first()
+            serializers = RiderProfileSerializer(user)
+        elif str(user.role).upper() == "VENDOR":
+            user = VendorProfile.objects.filter(email=user.email).first()
+            serializers = VendorProfileSerializer(user)
+        elif str(user.role).upper() == "ADMIN":
+            user = UserAuth.objects.filter(email=user.email).first()
+            serializers = AdminProfileSerializer(user)
+        return Response({"status":"success","message": "Account verified successfully.","access_token":tokens,"data": serializers.data}, status=200)
 
 class ForgotPasswordView(APIView):
     def post(self, request):
@@ -241,6 +254,9 @@ class UpdateUserProfile(APIView):
             user = request.user
         data = request.data
         update_fields=[]
+        if 'image' in request.FILES:
+            user.image = request.FILES['image']
+            user.save(update_fields=['image'])
 
         if str(user.role).upper() == 'ADMIN':
             if 'full_name' in data:
@@ -260,9 +276,6 @@ class UpdateUserProfile(APIView):
             if 'phone_number' in data:
                 user.phone_number = data.get('phone_number')
                 update_fields.append('phone_number')
-            if 'image' in request.FILES:
-                user.image = request.FILES['image']
-                update_fields.append('image')
             if 'address' in data:
                 user.address = data.get('address')
                 update_fields.append('address')
@@ -277,9 +290,6 @@ class UpdateUserProfile(APIView):
             if 'phone_number' in data:
                 user.phone_number = data.get('phone_number')
                 update_fields.append('phone_number')
-            if 'image' in request.FILES:
-                user.image = request.FILES['image']
-                update_fields.append('image')
             if 'shop_name' in data:
                 user.shop_name = data.get('shop_name')
                 update_fields.append('shop_name')
@@ -318,9 +328,6 @@ class UpdateUserProfile(APIView):
             if 'phone_number' in data:
                 user.phone_number = data.get('phone_number')
                 update_fields.append('phone_number')
-            if 'image' in request.FILES:
-                user.image = request.FILES['image']
-                update_fields.append('image')
             if 'vehicle_type' in data:
                 user.vehicle_type = data.get('vehicle_type')
                 update_fields.append('vehicle_type')
@@ -375,3 +382,51 @@ class AllUserListView(APIView):
             "message": "All users fetched successfully.",
             "data": serializer.data
         }, status=200)
+    
+
+class AllShopListView(APIView):
+    def get(self, request):
+        users = UserAuth.objects.filter(role='VENDOR').all()
+        combined_data = []
+        for user in users:
+            combined_data.append(VendorProfile.objects.get(email=user.email))
+        
+        serializer = ShopSerializer(combined_data, many=True)
+        return Response({
+            "status": "success",
+            "message": "All shop fetched successfully.",
+            "data": serializer.data
+        }, status=200)
+    
+
+class SearchShopView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        # Get search query parameters
+        query = request.GET.get('q', '')
+        
+        if query:
+            # Search products by name or description (case-insensitive)
+            shop = VendorProfile.objects.filter(
+                shop_name__icontains=query
+            )
+
+            if not shop.exists():
+                return Response({
+                    "status": "error",
+                    "message": "No Shop found matching the search query."
+                }, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = ShopSerializer(shop, many=True)
+            return Response({
+                "status": "success",
+                "data": serializer.data
+            }, status=status.HTTP_200_OK)
+        
+        return Response({
+            "status": "error",
+            "message": "Search query is required."
+        }, status=status.HTTP_400_BAD_REQUEST)
+    

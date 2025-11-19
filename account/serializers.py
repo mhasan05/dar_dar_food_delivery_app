@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from account.models import *
+from products.serializers import *
+from account.serializers import *
 
 
 class AdminProfileSerializer(serializers.ModelSerializer):
@@ -100,3 +102,10 @@ class CombinedUserSerializer(serializers.Serializer):
                 "branch": instance.branch,
             }
         return super().to_representation(instance)
+    
+
+class ShopSerializer(serializers.ModelSerializer):
+    subcategories = ShopSubCategorySerializer(many=True, read_only=True)
+    class Meta:
+        model = VendorProfile
+        fields = ['id','shop_name','shop_image','shop_license','shop_type','shop_address','rating','subcategories']
