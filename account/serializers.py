@@ -37,7 +37,7 @@ class CombinedUserSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     image = serializers.ImageField(required=False)
     role = serializers.CharField()
-    address = serializers.CharField(required=False)
+    delivery_address = serializers.CharField(required=False)
     rating = serializers.FloatField(required=False)
     shop_name = serializers.CharField(required=False)
     shop_image = serializers.ImageField(required=False)
@@ -52,8 +52,8 @@ class CombinedUserSerializer(serializers.Serializer):
     account_name = serializers.CharField(required=False)
     account_number = serializers.CharField(required=False)
     branch = serializers.CharField(required=False)
-    location_lat = serializers.FloatField(required=False)
-    location_long = serializers.FloatField(required=False)
+    current_address = serializers.CharField(required=False)
+
 
     def to_representation(self, instance):
         if isinstance(instance, VendorProfile):
@@ -74,8 +74,7 @@ class CombinedUserSerializer(serializers.Serializer):
                 "account_name": instance.account_name,
                 "account_number": instance.account_number,
                 "branch": instance.branch,
-                "location_lat": instance.location_lat,
-                "location_long": instance.location_long
+                "current_address": instance.current_address
             }
         elif isinstance(instance, UserProfile):
             return {
@@ -85,9 +84,8 @@ class CombinedUserSerializer(serializers.Serializer):
                 "phone_number": instance.phone_number,
                 "image": instance.image.url if instance.image else None,
                 "role": instance.role,
-                "address": instance.address,
-                "location_lat": instance.location_lat,
-                "location_long": instance.location_long
+                "delivery_address": instance.delivery_address,
+                "current_address": instance.current_address
             }
         elif isinstance(instance, RiderProfile):
             return {
@@ -106,8 +104,7 @@ class CombinedUserSerializer(serializers.Serializer):
                 "account_name": instance.account_name,
                 "account_number": instance.account_number,
                 "branch": instance.branch,
-                "location_lat": instance.location_lat,
-                "location_long": instance.location_long
+                "current_address": instance.current_address
             }
         return super().to_representation(instance)
     

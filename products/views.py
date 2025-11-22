@@ -296,7 +296,7 @@ class SubCategoryWiseProductListView(APIView):
         if role == 'VENDOR':
             products = Product.objects.filter(subcategory=subcategory_id, vendor=user)
         else:
-            products = Product.objects.filter(subcategory=subcategory_id) #i have to control view based on user and vendor
+            products = Product.objects.filter(subcategory=subcategory_id)
 
         if not products.exists():
             return Response({

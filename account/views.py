@@ -14,6 +14,7 @@ from rest_framework import status,permissions
 from utils.common_function import send_otp
 from django.utils import timezone
 from .serializers import *
+from utils.common_function import get_location
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +66,13 @@ class SignupView(APIView):
         role = request.data.get('role')
         password = request.data.get('password')
         confirm_password = request.data.get('confirm_password')
+        current_location = (request.data.get('current_location')).split(",")
+        if current_location:
+            location_lat , location_long = current_location[0], current_location[1]
+            # current_address = get_location(location_lat,location_long)
+            current_address ="Dhaka,Bangladesh"
+        else:
+            current_address =None
 
         if password != confirm_password:
             return Response({"status": "error", "message": "Passwords do not match."}, status=status.HTTP_400_BAD_REQUEST)
@@ -88,13 +96,13 @@ class SignupView(APIView):
         try:
             with transaction.atomic():
                 if role.upper() == "USER":
-                    user = UserProfile.objects.create_user(full_name=full_name, email=email.lower(),role=role.upper(), phone_number=phone_number, password=password,is_approved=True)
+                    user = UserProfile.objects.create_user(full_name=full_name, email=email.lower(),role=role.upper(), phone_number=phone_number, password=password,is_approved=True,current_address=current_address)
                     user.save()
                 elif role.upper() == "RIDER":
-                    user = RiderProfile.objects.create_user(full_name=full_name, email=email.lower(),role=role.upper(), phone_number=phone_number, password=password)
+                    user = RiderProfile.objects.create_user(full_name=full_name, email=email.lower(),role=role.upper(), phone_number=phone_number, password=password,current_address=current_address)
                     user.save()
                 elif role.upper() == "VENDOR":
-                    user = VendorProfile.objects.create_user(full_name=full_name, email=email.lower(),role=role.upper(), phone_number=phone_number, password=password)
+                    user = VendorProfile.objects.create_user(full_name=full_name, email=email.lower(),role=role.upper(), phone_number=phone_number, password=password,current_address=current_address)
                     user.save()
             sent_email,otp = send_otp(user)
 

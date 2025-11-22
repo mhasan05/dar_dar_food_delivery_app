@@ -19,8 +19,8 @@ class UserAuth(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=15, unique=True)
     image = models.ImageField(upload_to='images/', null=True, blank=True)
     role = models.CharField(max_length=20, choices=Roles.choices, default=Roles.USER)
-    location_lat = models.FloatField(null=True, blank=True)
-    location_long = models.FloatField(null=True, blank=True)
+    current_location = models.CharField(max_length=255,null=True, blank=True)
+    current_address = models.CharField(max_length=255,null=True, blank=True)
     otp = models.CharField(max_length=6, null=True, blank=True)
     otp_expired = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
@@ -47,7 +47,7 @@ class UserAuth(AbstractBaseUser, PermissionsMixin):
 
 
 class UserProfile(UserAuth):
-    address = models.TextField(null=True, blank=True)
+    delivery_address = models.TextField(null=True, blank=True)
 
     class Meta:
         verbose_name_plural = "Customer Profile"

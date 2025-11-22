@@ -10,7 +10,19 @@ from datetime import timedelta
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db import transaction
 import logging
+from dotenv import load_dotenv
+import os
+import googlemaps
+load_dotenv()
 logger = logging.getLogger(__name__)
+
+api_key = os.getenv('GOOGLE_MAPS_API_KEY')
+
+gmaps = googlemaps.Client(key=api_key)
+
+def get_location(lat, lon):
+    result = gmaps.reverse_geocode((lat, lon))
+    return result[0]['formatted_address'] if result else None
 
 def send_otp(user):
     otp = str(random.randint(100000, 999999))
