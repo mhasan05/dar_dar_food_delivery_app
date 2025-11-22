@@ -52,6 +52,8 @@ class CombinedUserSerializer(serializers.Serializer):
     account_name = serializers.CharField(required=False)
     account_number = serializers.CharField(required=False)
     branch = serializers.CharField(required=False)
+    location_lat = serializers.FloatField(required=False)
+    location_long = serializers.FloatField(required=False)
 
     def to_representation(self, instance):
         if isinstance(instance, VendorProfile):
@@ -72,6 +74,8 @@ class CombinedUserSerializer(serializers.Serializer):
                 "account_name": instance.account_name,
                 "account_number": instance.account_number,
                 "branch": instance.branch,
+                "location_lat": instance.location_lat,
+                "location_long": instance.location_long
             }
         elif isinstance(instance, UserProfile):
             return {
@@ -82,6 +86,8 @@ class CombinedUserSerializer(serializers.Serializer):
                 "image": instance.image.url if instance.image else None,
                 "role": instance.role,
                 "address": instance.address,
+                "location_lat": instance.location_lat,
+                "location_long": instance.location_long
             }
         elif isinstance(instance, RiderProfile):
             return {
@@ -100,6 +106,8 @@ class CombinedUserSerializer(serializers.Serializer):
                 "account_name": instance.account_name,
                 "account_number": instance.account_number,
                 "branch": instance.branch,
+                "location_lat": instance.location_lat,
+                "location_long": instance.location_long
             }
         return super().to_representation(instance)
     

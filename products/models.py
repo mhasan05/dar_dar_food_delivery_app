@@ -42,6 +42,8 @@ class Product(models.Model):
     
     quantity = models.CharField(max_length=100)
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2)
+
+    is_active = models.BooleanField(default=True)
     
     # Timestamps for product creation and update
     created_at = models.DateTimeField(auto_now_add=True)
