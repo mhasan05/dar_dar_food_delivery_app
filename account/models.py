@@ -61,6 +61,7 @@ class VendorProfile(UserAuth):
     shop_type = models.CharField(max_length=100, blank=True)
     shop_address = models.TextField(null=True, blank=True)
     rating = models.FloatField(default=0)
+    total_rating_count = models.IntegerField(default=0)
 
     bank_name = models.CharField(max_length=100, blank=True)
     account_name = models.CharField(max_length=100, blank=True)
@@ -82,6 +83,9 @@ class RiderProfile(UserAuth):
     account_name = models.CharField(max_length=100, blank=True)
     account_number = models.CharField(max_length=100, blank=True)
     branch = models.CharField(max_length=100, blank=True)
+
+    rating = models.FloatField(default=0)
+    total_rating_count = models.IntegerField(default=0)
 
     availability_status = models.BooleanField(default=True)
 

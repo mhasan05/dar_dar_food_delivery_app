@@ -111,6 +111,11 @@ class CombinedUserSerializer(serializers.Serializer):
 
 class ShopSerializer(serializers.ModelSerializer):
     subcategories = ShopSubCategorySerializer(many=True, read_only=True)
+    estimate_delivery_time = serializers.SerializerMethodField()
     class Meta:
         model = VendorProfile
-        fields = ['id','shop_name','shop_image','shop_license','shop_type','shop_address','rating','subcategories']
+        fields = ['id','shop_name','shop_image','shop_license','shop_type','shop_address','rating','total_rating_count','subcategories','estimate_delivery_time']
+
+    def get_estimate_delivery_time(self, obj):
+        
+        return "20-30 minutes"

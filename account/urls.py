@@ -25,4 +25,6 @@ urlpatterns = [
 
     path('all_shop/', AllShopListView.as_view(), name='all_shop'),
     path('shop/search/', SearchShopView.as_view(), name='search-shop'),
+
+    path('all_grocery/', AllGroceryShopListView.as_view(), name='all_grocery'),
 ]

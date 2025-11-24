@@ -169,7 +169,12 @@ class VendorCategoryWiseSubCategoryListView(APIView):
 
     def get(self, request, category_id):
         # Filter subcategories by the provided category_id
-        subcategories = SubCategory.objects.filter(category_id=category_id, vendor=request.user)
+        user = request.user
+        role = str(user.role).upper()
+        if role == 'VENDOR':
+            subcategories = SubCategory.objects.filter(category_id=category_id, vendor=user)
+        else:
+            subcategories = SubCategory.objects.filter(category_id=category_id)
 
         if not subcategories:
             return Response({

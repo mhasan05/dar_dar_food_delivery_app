@@ -90,7 +90,7 @@ class VendorProfileAdmin(UserAdmin):
 
     fieldsets = (
         ('Login Credentials', {'fields': ('email','phone_number', 'password')}),
-        ('Personal Info', {'fields': ('full_name','shop_name','shop_type','shop_address','rating')}),
+        ('Personal Info', {'fields': ('full_name','shop_name','shop_type','shop_image','shop_license','shop_address','rating')}),
         ('Bank Info', {'fields': ('bank_name','account_name','account_number','branch')}),
         ('Role & Permissions', {'fields': ('role', 'is_active')}),
         ('OTP', {'fields': ('otp', 'otp_expired')}),
@@ -99,7 +99,7 @@ class VendorProfileAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('full_name','email','phone_number', 'role','shop_name','shop_type','shop_address','rating','bank_name','account_name','account_number','branch', 'password1', 'password2', 'is_active')
+            'fields': ('full_name','email','phone_number', 'role','shop_name','shop_type', 'role','shop_image','shop_license','shop_address','rating','bank_name','account_name','account_number','branch', 'password1', 'password2', 'is_active')
         }),
     )
     

@@ -94,7 +94,7 @@ class SignupView(APIView):
                     return Response({"status": "error", "message": "Invalid role."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            with transaction.atomic():
+            with transaction.atomic():                                   
                 if role.upper() == "USER":
                     user = UserProfile.objects.create_user(full_name=full_name, email=email.lower(),role=role.upper(), phone_number=phone_number, password=password,is_approved=True,current_address=current_address)
                     user.save()
@@ -266,13 +266,18 @@ class UpdateUserProfile(APIView):
             user.image = request.FILES['image']
             user.save(update_fields=['image'])
 
+        if 'phone_number' in data:
+            phone_number = data.get('phone_number')
+            if not UserAuth.objects.filter(phone_number=phone_number).exists():
+                user.phone_number = phone_number
+                user.save(update_fields=['phone_number'])
+            else:
+                return Response({"status":"error","message": "Phone number already exists."}, status=400)
+
         if str(user.role).upper() == 'ADMIN':
             if 'full_name' in data:
                 user.full_name = data.get('full_name')
                 update_fields.append('full_name')
-            if 'phone_number' in data:
-                user.phone_number = data.get('phone_number')
-                update_fields.append('phone_number')
             user.save(update_fields=update_fields)
             serializers = AdminProfileSerializer(user)
         
@@ -281,12 +286,9 @@ class UpdateUserProfile(APIView):
             if 'full_name' in data:
                 user.full_name = data.get('full_name')
                 update_fields.append('full_name')
-            if 'phone_number' in data:
-                user.phone_number = data.get('phone_number')
-                update_fields.append('phone_number')
-            if 'address' in data:
-                user.address = data.get('address')
-                update_fields.append('address')
+            if 'current_location' in data:
+                user.current_location = data.get('current_location')
+                update_fields.append('current_location')
             user.save(update_fields=update_fields)
             serializers = UserProfileSerializer(user)
 
@@ -295,9 +297,6 @@ class UpdateUserProfile(APIView):
             if 'full_name' in data:
                 user.full_name = data.get('full_name')
                 update_fields.append('full_name')
-            if 'phone_number' in data:
-                user.phone_number = data.get('phone_number')
-                update_fields.append('phone_number')
             if 'shop_name' in data:
                 user.shop_name = data.get('shop_name')
                 update_fields.append('shop_name')
@@ -333,9 +332,6 @@ class UpdateUserProfile(APIView):
             if 'full_name' in data:
                 user.full_name = data.get('full_name')
                 update_fields.append('full_name')
-            if 'phone_number' in data:
-                user.phone_number = data.get('phone_number')
-                update_fields.append('phone_number')
             if 'vehicle_type' in data:
                 user.vehicle_type = data.get('vehicle_type')
                 update_fields.append('vehicle_type')
@@ -397,7 +393,8 @@ class AllShopListView(APIView):
         users = UserAuth.objects.filter(role='VENDOR').all()
         combined_data = []
         for user in users:
-            combined_data.append(VendorProfile.objects.get(email=user.email))
+            if VendorProfile.objects.filter(email=user.email).exclude(shop_type='Grocery').exists():
+                combined_data.append(VendorProfile.objects.get(email=user.email))
         
         serializer = ShopSerializer(combined_data, many=True)
         return Response({
@@ -406,7 +403,20 @@ class AllShopListView(APIView):
             "data": serializer.data
         }, status=200)
     
-
+class AllGroceryShopListView(APIView):
+    def get(self, request):
+        users = UserAuth.objects.filter(role='VENDOR').all()
+        combined_data = []
+        for user in users:
+            if VendorProfile.objects.filter(email=user.email, shop_type='Grocery').exists():
+                combined_data.append(VendorProfile.objects.get(email=user.email, shop_type='Grocery'))
+        
+        serializer = ShopSerializer(combined_data, many=True)
+        return Response({
+            "status": "success",
+            "message": "All shop fetched successfully.",
+            "data": serializer.data
+        }, status=200)
 class SearchShopView(APIView):
     permission_classes = [IsAuthenticated]
 
