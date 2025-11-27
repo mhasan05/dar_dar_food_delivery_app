@@ -131,6 +131,8 @@ class VendorProductListCreateView(APIView):
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_201_CREATED)
         return Response({"status": "error", "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+
+
 class VendorSubCategoryDetailUpdateDeleteView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -314,3 +316,17 @@ class SubCategoryWiseProductListView(APIView):
             "status": "success",
             "data": serializer.data
         }, status=status.HTTP_200_OK)
+
+
+
+class SingleProductView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            product = Product.objects.get(id=pk)
+        except Product.DoesNotExist:
+            return Response({"status": "error", "message": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ProductSerializer(product)
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)

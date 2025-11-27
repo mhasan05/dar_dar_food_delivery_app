@@ -22,7 +22,23 @@ gmaps = googlemaps.Client(key=api_key)
 
 def get_location(lat, lon):
     result = gmaps.reverse_geocode((lat, lon))
-    return result[0]['formatted_address'] if result else None
+    if result:
+        # Extract formatted address
+        formatted_address = result[0].get('formatted_address', None)
+        print(formatted_address)
+        
+        # Check if we received a Plus Code (e.g., "Q95R+J9R")
+        if 'plus_code' in result[0]:
+            plus_code = result[0]['plus_code'].get('global_code', '')
+            if plus_code:
+                # If a Plus Code is detected, use the Geocode API to get a full address
+                geocode_result = gmaps.geocode(plus_code)
+                if geocode_result:
+                    formatted_address = geocode_result[0].get('formatted_address', None)
+
+        return formatted_address if formatted_address else "Unknown Location"
+
+    return None
 
 def send_otp(user):
     otp = str(random.randint(100000, 999999))

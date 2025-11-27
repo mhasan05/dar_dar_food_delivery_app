@@ -13,7 +13,14 @@ urlpatterns = [
     path('products/<int:pk>/', VendorProductListCreateView.as_view(), name='product-list-create'),
     path('single_products/<int:pk>/', VendorProductDetailUpdateDeleteView.as_view(), name='product-detail-update-delete'),
 
+    path('product_details/<int:pk>/', SingleProductView.as_view(), name='product_details'),
+    
+
     path('products/search/', SearchProductView.as_view(), name='search-products'),
     path('categories/<int:category_id>/products/', CategoryWiseProductListView.as_view(), name='category-wise-products'),
     path('subcategories/<int:subcategory_id>/products/', SubCategoryWiseProductListView.as_view(), name='subcategory-wise-products'),
+
+
+
+
 ]

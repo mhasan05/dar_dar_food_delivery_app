@@ -21,13 +21,13 @@ class RiderProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = RiderProfile
         # fields = '__all__'
-        exclude = ['password','last_login','is_superuser','is_staff','is_active','date_joined','groups','user_permissions','otp','otp_expired','is_approved']
+        exclude = ['password','last_login','is_superuser','is_staff','is_active','date_joined','groups','user_permissions','otp','otp_expired']
 
 class VendorProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = VendorProfile
         # fields = '__all__'
-        exclude = ['password','last_login','is_superuser','is_staff','is_active','date_joined','groups','user_permissions','otp','otp_expired','is_approved']
+        exclude = ['password','last_login','is_superuser','is_staff','is_active','date_joined','groups','user_permissions','otp','otp_expired']
 
 
 class CombinedUserSerializer(serializers.Serializer):
@@ -119,3 +119,11 @@ class ShopSerializer(serializers.ModelSerializer):
     def get_estimate_delivery_time(self, obj):
         
         return "20-30 minutes"
+    
+
+
+class BannerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Banner
+        fields = ['id', 'vendor', 'image', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']

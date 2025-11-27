@@ -10,6 +10,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/auth/', include('account.urls')),
     path('api/v1/products/', include('products.urls')),
+    path('api/v1/settings/', include('settings.urls')),
+    path('api/v1/wishlist/', include('wishlist.urls')),
+    path('api/v1/order/', include('order.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

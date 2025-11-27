@@ -96,3 +96,16 @@ class RiderProfile(UserAuth):
 
 
 
+class Banner(models.Model):
+    vendor = models.ForeignKey(VendorProfile, on_delete=models.SET_NULL, null=True, blank=True)
+    image = models.ImageField(upload_to='banner_images/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+    def __str__(self):
+        return self.vendor.shop_name
+
+    class Meta:
+        verbose_name_plural = "Banner"
+        db_table = "banner"

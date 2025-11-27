@@ -69,8 +69,8 @@ class SignupView(APIView):
         current_location = (request.data.get('current_location')).split(",")
         if current_location:
             location_lat , location_long = current_location[0], current_location[1]
-            # current_address = get_location(location_lat,location_long)
-            current_address ="Dhaka,Bangladesh"
+            current_address = get_location(location_lat,location_long)
+            # current_address ="Dhaka,Bangladesh"
         else:
             current_address =None
 
@@ -221,7 +221,7 @@ class ResendOTPView(APIView):
             return Response({"status":"error","message": "Something went wrong, please try again later."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(
-            {"status":"success","message": "A new OTP has been sent to your email."},
+            {"status":"success","message": "A new OTP has been sent to your email.", "otp": user.otp},
             status=status.HTTP_200_OK
         )
 
@@ -268,11 +268,20 @@ class UpdateUserProfile(APIView):
 
         if 'phone_number' in data:
             phone_number = data.get('phone_number')
-            if not UserAuth.objects.filter(phone_number=phone_number).exists():
-                user.phone_number = phone_number
-                user.save(update_fields=['phone_number'])
-            else:
-                return Response({"status":"error","message": "Phone number already exists."}, status=400)
+            if user.phone_number != phone_number:
+                if not UserAuth.objects.filter(phone_number=phone_number).exists():
+                    user.phone_number = phone_number
+                    user.save(update_fields=['phone_number'])
+                else:
+                    return Response({"status":"error","message": "Phone number already exists."}, status=400)
+                
+        if 'current_location' in data:
+            current_location = (data.get('current_location')).split(",")
+            location_lat , location_long = current_location[0], current_location[1]
+            current_address = get_location(location_lat,location_long)
+            user.current_location = data.get('current_location')
+            user.current_address = current_address
+            user.save()
 
         if str(user.role).upper() == 'ADMIN':
             if 'full_name' in data:
@@ -286,9 +295,7 @@ class UpdateUserProfile(APIView):
             if 'full_name' in data:
                 user.full_name = data.get('full_name')
                 update_fields.append('full_name')
-            if 'current_location' in data:
-                user.current_location = data.get('current_location')
-                update_fields.append('current_location')
+            
             user.save(update_fields=update_fields)
             serializers = UserProfileSerializer(user)
 
@@ -347,6 +354,18 @@ class UpdateUserProfile(APIView):
             if 'availability_status' in data:
                 user.availability_status = data.get('availability_status')
                 update_fields.append('availability_status')
+            if 'bank_name' in data:
+                user.bank_name = data.get('bank_name')
+                update_fields.append('bank_name')
+            if 'account_name' in data:
+                user.account_name = data.get('account_name')
+                update_fields.append('account_name')
+            if 'account_number' in data:
+                user.account_number = data.get('account_number')
+                update_fields.append('account_number')
+            if 'branch' in data:
+                user.branch = data.get('branch')
+                update_fields.append('branch')
             user.save(update_fields=update_fields)
             serializers = RiderProfileSerializer(user)
 
@@ -448,3 +467,159 @@ class SearchShopView(APIView):
             "message": "Search query is required."
         }, status=status.HTTP_400_BAD_REQUEST)
     
+
+
+
+
+class BannerListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        List banners for logged-in vendor.
+        Admin can see all.
+        """
+        user = request.user
+
+        banners = Banner.objects.all()
+
+        serializer = BannerSerializer(banners, many=True)
+        return Response(
+            {"status": "success", "data": serializer.data},
+            status=status.HTTP_200_OK
+        )
+
+    def post(self, request):
+        """
+        Create new banner for logged-in vendor.
+        Only VENDOR or ADMIN allowed.
+        """
+        user = request.user
+        data = request.data
+        data["vendor"] = request.user.id
+
+        if str(user.role).upper() not in ['VENDOR', 'ADMIN']:
+            return Response(
+                {"status": "error", "message": "Only vendor or admin can create banners."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = BannerSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"status": "success", "message": "Banner created successfully.", "data": serializer.data},
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            {"status": "error", "message": "Banner creation failed.", "errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+
+
+
+class BannerDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk, user):
+        try:
+            banner = Banner.objects.get(pk=pk)
+        except Banner.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        banner = self.get_object(pk, request.user)
+        if not banner:
+            return Response(
+                {"status": "error", "message": "Banner not found or unauthorized."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = BannerSerializer(banner)
+        return Response(
+            {"status": "success", "data": serializer.data},
+            status=status.HTTP_200_OK
+        )
+
+    def put(self, request, pk):
+        """
+        Full update banner (replace).
+        """
+        banner = self.get_object(pk, request.user)
+        if not banner:
+            return Response(
+                {"status": "error", "message": "Banner not found or unauthorized."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = BannerSerializer(banner, data=request.data, partial=False)
+        if serializer.is_valid():
+            serializer.save()  # vendor not touched (read_only)
+            return Response(
+                {"status": "success", "message": "Banner updated successfully.", "data": serializer.data},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            {"status": "error", "message": "Banner update failed.", "errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def patch(self, request, pk):
+        """
+        Partial update banner.
+        """
+        banner = self.get_object(pk, request.user)
+        if not banner:
+            return Response(
+                {"status": "error", "message": "Banner not found or unauthorized."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = BannerSerializer(banner, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"status": "success", "message": "Banner updated successfully.", "data": serializer.data},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            {"status": "error", "message": "Banner update failed.", "errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def delete(self, request, pk):
+        banner = self.get_object(pk, request.user)
+        if not banner:
+            return Response(
+                {"status": "error", "message": "Banner not found or unauthorized."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        banner.delete()
+        return Response(
+            {"status": "success", "message": "Banner deleted successfully."},
+            status=status.HTTP_200_OK
+        )
+
+
+
+class VendorBannerDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        banner = Banner.objects.filter(vendor_id=pk).first()
+        if not banner:
+            return Response(
+                {"status": "error", "message": "Banner not found or unauthorized."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = BannerSerializer(banner)
+        return Response(
+            {"status": "success", "data": serializer.data},
+            status=status.HTTP_200_OK
+        )

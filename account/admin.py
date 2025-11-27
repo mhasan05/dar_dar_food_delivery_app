@@ -92,7 +92,7 @@ class VendorProfileAdmin(UserAdmin):
         ('Login Credentials', {'fields': ('email','phone_number', 'password')}),
         ('Personal Info', {'fields': ('full_name','shop_name','shop_type','shop_image','shop_license','shop_address','rating')}),
         ('Bank Info', {'fields': ('bank_name','account_name','account_number','branch')}),
-        ('Role & Permissions', {'fields': ('role', 'is_active')}),
+        ('Role & Permissions', {'fields': ('role', 'is_active','is_approved')}),
         ('OTP', {'fields': ('otp', 'otp_expired')}),
     )
 
@@ -104,3 +104,5 @@ class VendorProfileAdmin(UserAdmin):
     )
     
 admin.site.register(VendorProfile,VendorProfileAdmin)
+
+admin.site.register(Banner)

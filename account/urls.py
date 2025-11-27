@@ -27,4 +27,11 @@ urlpatterns = [
     path('shop/search/', SearchShopView.as_view(), name='search-shop'),
 
     path('all_grocery/', AllGroceryShopListView.as_view(), name='all_grocery'),
+
+
+
+    path('banners/', BannerListCreateView.as_view(), name='banner-list-create'),
+    path('banners/<int:pk>/', BannerDetailView.as_view(), name='banner-detail'),
+
+    path('banners/vendor/<int:pk>/', VendorBannerDetailView.as_view(), name='banner-detail'),
 ]
