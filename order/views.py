@@ -141,6 +141,43 @@ class VendorPendingOrderListView(APIView):
         )
 
 
+class VendorDeliveredOrderListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != "VENDOR":
+            return Response(
+                {"status": "error", "message": "Only vendors can view their orders."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        try:
+            vendor = VendorProfile.objects.get(id=request.user.id)
+        except VendorProfile.DoesNotExist:
+            return Response(
+                {"status": "error", "message": "Vendor profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Step 1 & 2 & 3: Get all orders that contain products from this vendor and are pending
+        orders = (
+            Order.objects.filter(
+                order_items__product__vendor=vendor,
+                status=Order.OrderStatus.DELIVERED
+            )
+            .distinct()
+            .order_by("-created_at")
+        )
+
+        pending_count = orders.count()
+
+        serializer = OrderSerializer(orders, many=True)
+
+        return Response(
+            {"status": "success","total_pending_orders":pending_count, "data": serializer.data},
+            status=status.HTTP_200_OK
+        )
+
 class VendorPickedOrderListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -263,7 +300,53 @@ class VendorAcceptOrderView(APIView):
             status=status.HTTP_200_OK
         )
 
+class VendorCancelOrderView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def post(self, request, order_id):
+        # Only vendor can accept orders
+        if request.user.role != "VENDOR":
+            return Response(
+                {"status": "error", "message": "Only vendors can cancel orders."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        try:
+            vendor = VendorProfile.objects.get(id=request.user.id)
+        except VendorProfile.DoesNotExist:
+            return Response(
+                {"status": "error", "message": "Vendor profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Find orders that actually belong to this vendor
+        try:
+            order = Order.objects.filter(
+                order_items__product__vendor=vendor
+            ).distinct().get(id=order_id)
+        except Order.DoesNotExist:
+            return Response(
+                {"status": "error", "message": "Order not found for this vendor."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Only pending orders can be accepted
+        if order.status != Order.OrderStatus.PENDING:
+            return Response(
+                {"status": "error", "message": "Order cannot be accepted at this stage."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Change order status to CANCELLED
+        order.status = Order.OrderStatus.CANCELLED
+        order.save()
+
+        serializer = OrderSerializer(order)
+
+        return Response(
+            {"status": "success", "message": "Order cancel successfully!", "data": serializer.data},
+            status=status.HTTP_200_OK
+        )
 
 class OrderCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -322,7 +405,7 @@ class OrderDetailView(APIView):
 
     def get(self, request, pk):
         try:
-            order = Order.objects.get(id=pk, user=request.user)  # Ensure the order belongs to the logged-in user
+            order = Order.objects.get(id=pk)  # Ensure the order belongs to the logged-in user
         except Order.DoesNotExist:
             return Response({"status": "error", "message": "Order not found or unauthorized."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -331,7 +414,7 @@ class OrderDetailView(APIView):
 
     def patch(self, request, pk):
         try:
-            order = Order.objects.get(id=pk, user=request.user)  # Ensure the order belongs to the logged-in user
+            order = Order.objects.get(id=pk)  # Ensure the order belongs to the logged-in user
         except Order.DoesNotExist:
             return Response({"status": "error", "message": "Order not found or unauthorized."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -343,7 +426,7 @@ class OrderDetailView(APIView):
 
     def delete(self, request, pk):
         try:
-            order = Order.objects.get(id=pk, user=request.user)  # Ensure the order belongs to the logged-in user
+            order = Order.objects.get(id=pk)  # Ensure the order belongs to the logged-in user
         except Order.DoesNotExist:
             return Response({"status": "error", "message": "Order not found or unauthorized."}, status=status.HTTP_404_NOT_FOUND)
 

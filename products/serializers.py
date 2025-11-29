@@ -40,7 +40,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id','name','description','shop_name','shop_image','category','subcategory','image_1','image_2','image_3','currency','price','quantity','delivery_fee','created_at','updated_at','vendor','shop_info','vendor_subcategories']
+        fields = ['id','name','description','shop_name','shop_image','category','subcategory','image_1','image_2','image_3','currency','price','quantity','delivery_fee','created_at','updated_at','vendor','shop_info','vendor_subcategories','is_active']
 
     def get_shop_name(self, obj):
         return obj.vendor.shop_name if obj.vendor else None
