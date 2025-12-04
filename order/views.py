@@ -6,6 +6,7 @@ from .models import Order, OrderItem
 from .serializers import OrderSerializer
 from products.models import Product
 from account.models import *
+from datetime import datetime
 
 class OrderListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -13,6 +14,16 @@ class OrderListView(APIView):
     def get(self, request):
         # Get all orders for the logged-in user
         orders = Order.objects.filter(user=request.user)
+        serializer = OrderSerializer(orders, many=True)
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+    
+
+class CompletedOrderListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Get all orders for the logged-in user
+        orders = Order.objects.filter(user=request.user,status='DELIVERED')
         serializer = OrderSerializer(orders, many=True)
         return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
     
@@ -172,11 +183,62 @@ class VendorDeliveredOrderListView(APIView):
         pending_count = orders.count()
 
         serializer = OrderSerializer(orders, many=True)
+        balance = request.user.vendorprofile.balance
+        total_orders = (
+            Order.objects.filter(order_items__product__vendor=vendor)
+            .distinct()
+            .count()
+        )
 
         return Response(
-            {"status": "success","total_pending_orders":pending_count, "data": serializer.data},
+            {"status": "success","balance":balance,"total_orders":total_orders,"total_delivered_orders":pending_count, "data": serializer.data},
             status=status.HTTP_200_OK
         )
+
+
+class RiderDeliveredOrderListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != "RIDER":
+            return Response(
+                {"status": "error", "message": "Only rider can view their orders."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        try:
+            rider = RiderProfile.objects.get(id=request.user.id)
+        except RiderProfile.DoesNotExist:
+            return Response(
+                {"status": "error", "message": "Rider profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Step 1 & 2 & 3: Get all orders that contain products from this rider and are pending
+        orders = (
+            Order.objects.filter(
+                rider=rider,
+                status=Order.OrderStatus.DELIVERED
+            )
+            .distinct()
+            .order_by("-created_at")
+        )
+
+        pending_count = orders.count()
+
+        serializer = OrderSerializer(orders, many=True)
+        balance = request.user.riderprofile.balance
+        total_orders = (
+            Order.objects.filter(rider=rider)
+            .distinct()
+            .count()
+        )
+
+        return Response(
+            {"status": "success","balance":balance,"total_orders":total_orders,"total_delivered_orders":pending_count, "data": serializer.data},
+            status=status.HTTP_200_OK
+        )
+
 
 class VendorPickedOrderListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -420,6 +482,8 @@ class OrderDetailView(APIView):
 
         # Update order status
         order.status = request.data.get('status', order.status)
+        if request.data.get('status') == 'Delivered':
+            order.final_delivery_time = datetime.now()
         order.save()
         serializer = OrderSerializer(order, partial=True)
         return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)

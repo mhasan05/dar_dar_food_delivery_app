@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Order, OrderItem
 from products.serializers import OrderProductSerializer  # Assuming you have a ProductSerializer
 from account.serializers import RiderProfileSerializer
+from account.models import *
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = OrderProductSerializer(read_only=True)  # Nested product data
@@ -10,16 +11,25 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = ['product', 'quantity', 'price']
 
+class ShopInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VendorProfile
+        fields = ['id', 'shop_name', 'shop_image', 'shop_address', 'rating']
+
+
+
 class OrderSerializer(serializers.ModelSerializer):
     order_items = OrderItemSerializer(many=True, read_only=True)  # No need for source
     total_order_items = serializers.SerializerMethodField()
     rider_info = RiderProfileSerializer(source='rider', read_only=True)
     pickup_address = serializers.SerializerMethodField()
     drop_address = serializers.SerializerMethodField()
+    shop_info = serializers.SerializerMethodField()
+    total = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
-        fields = ['id', 'user','total_order_items','pickup_address','drop_address', 'order_items', 'total_price', 'status', 'delivery_address','rider','rider_info', 'created_at', 'updated_at']
+        fields = ['id', 'user','total_order_items','pickup_address','drop_address', 'order_items', 'total_price','admin_fee','total', 'status', 'delivery_address','rider','rider_info','shop_info','final_delivery_time', 'created_at', 'updated_at']
         read_only_fields = ['user', 'created_at', 'updated_at', 'total_price','rider_info']
 
     def get_total_order_items(self, obj):
@@ -38,3 +48,17 @@ class OrderSerializer(serializers.ModelSerializer):
     def get_drop_address(self, obj):
         """Drop address = order.delivery_address"""
         return obj.user.current_location
+    
+    def get_shop_info(self, obj):
+        """Return vendor shop info from first product"""
+        first_item = obj.order_items.first()
+        if first_item:
+            vendor = first_item.product.vendor
+            return ShopInfoSerializer(vendor).data
+        return None
+    
+    def get_total(self, obj):
+        """Total paid to vendor = total_price - admin_fee"""
+        if obj.total_price is None:
+            return 0
+        return float(obj.total_price) - float(obj.admin_fee)

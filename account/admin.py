@@ -66,14 +66,14 @@ class RiderProfileAdmin(UserAdmin):
         ('Personal Info', {'fields': ('full_name','rating')}),
         ('Vehicle Info', {'fields': ('vehicle_type', 'license_number', 'vehicle_plate','availability_status')}),
         ('Bank Info', {'fields': ('bank_name','account_name','account_number','branch')}),
-        ('Role & Permissions', {'fields': ('role', 'is_active')}),
+        ('Role & Permissions', {'fields': ('role', 'is_active','is_approved')}),
         ('OTP', {'fields': ('otp', 'otp_expired')}),
     )
 
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('full_name','email','phone_number', 'role','rating','vehicle_type', 'license_number', 'vehicle_plate','availability_status','bank_name','account_name','account_number','branch', 'password1', 'password2', 'is_active')
+            'fields': ('full_name','email','phone_number', 'role','rating','vehicle_type', 'license_number', 'vehicle_plate','availability_status','bank_name','account_name','account_number','branch', 'password1', 'password2', 'is_active','is_approved')
         }),
     )
     

@@ -48,3 +48,32 @@ class AboutUs(models.Model):
 
     def __str__(self):
         return str(self.title)
+    
+
+
+
+class FAQ(models.Model):
+    question = models.CharField(max_length=255)
+    answer = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "faq"
+        verbose_name_plural = "FAQs"
+
+    def __str__(self):
+        return self.question
+
+
+class Feedback(models.Model):
+    name = models.CharField(max_length=100)
+    comments = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "feedback"
+        verbose_name_plural = "Feedbacks"
+
+    def __str__(self):
+        return f"Feedback from {self.name}"

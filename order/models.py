@@ -16,6 +16,7 @@ class Order(models.Model):
     status = models.CharField(max_length=10, choices=OrderStatus.choices, default=OrderStatus.PENDING)
     delivery_address = models.TextField()
     total_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Total price
+    admin_fee = models.DecimalField(max_digits=10, decimal_places=2, default=50)
     rider = models.ForeignKey(RiderProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_orders')
     final_delivery_time = models.DateTimeField(null=True, blank=True)
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)

@@ -55,6 +55,7 @@ class UserProfile(UserAuth):
 
 
 class VendorProfile(UserAuth):
+    balance = models.FloatField(default=0)
     shop_name = models.CharField(max_length=150, blank=True)
     shop_image = models.ImageField(upload_to='shop_image/', null=True, blank=True)
     shop_license = models.ImageField(upload_to='shop_license/', null=True, blank=True)
@@ -74,6 +75,7 @@ class VendorProfile(UserAuth):
 
 
 class RiderProfile(UserAuth):
+    balance = models.FloatField(default=0)
     rating = models.FloatField(default=0)
     vehicle_type = models.CharField(max_length=50, blank=True)
     license_number = models.CharField(max_length=100, blank=True)

@@ -530,7 +530,7 @@ class BannerDetailView(APIView):
             return None
 
     def get(self, request, pk):
-        banner = self.get_object(pk, request.user)
+        banner = Banner.objects.get(pk=pk, vendor=request.user)
         if not banner:
             return Response(
                 {"status": "error", "message": "Banner not found or unauthorized."},
@@ -547,7 +547,7 @@ class BannerDetailView(APIView):
         """
         Full update banner (replace).
         """
-        banner = self.get_object(pk, request.user)
+        banner = Banner.objects.get(pk=pk, vendor=request.user)
         if not banner:
             return Response(
                 {"status": "error", "message": "Banner not found or unauthorized."},
@@ -571,7 +571,7 @@ class BannerDetailView(APIView):
         """
         Partial update banner.
         """
-        banner = self.get_object(pk, request.user)
+        banner = Banner.objects.get(pk=pk, vendor=request.user)
         if not banner:
             return Response(
                 {"status": "error", "message": "Banner not found or unauthorized."},
@@ -592,7 +592,7 @@ class BannerDetailView(APIView):
         )
 
     def delete(self, request, pk):
-        banner = self.get_object(pk, request.user)
+        banner = Banner.objects.get(pk=pk, vendor=request.user)
         if not banner:
             return Response(
                 {"status": "error", "message": "Banner not found or unauthorized."},

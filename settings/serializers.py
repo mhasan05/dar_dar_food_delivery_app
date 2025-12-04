@@ -21,3 +21,15 @@ class AboutUsSerializer(serializers.ModelSerializer):
         model = AboutUs
         fields = ['id', 'title', 'content', 'created_on', 'updated_on']
         read_only_fields = ['created_on', 'updated_on']
+
+
+class FAQSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FAQ
+        fields = ['id', 'question', 'answer', 'created_at', 'updated_at']
+
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = ['id', 'name', 'comments', 'created_at']

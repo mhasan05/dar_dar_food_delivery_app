@@ -127,3 +127,110 @@ class AboutUsListCreateAPIView(APIView):
             return Response({'status': 'error', 'message': 'About us not found'}, status=status.HTTP_404_NOT_FOUND)
         about_us.delete()
         return Response({'status': 'success', 'message': 'About us deleted'}, status=status.HTTP_204_NO_CONTENT)
+    
+
+
+class FAQCreateView(APIView):
+
+    def get(self, request):
+        faqs = FAQ.objects.all()
+        serializer = FAQSerializer(faqs, many=True)
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        question = request.data.get('question')
+        answer = request.data.get('answer')
+
+        if not question or not answer:
+            return Response({"status": "error", "message": "Question and Answer are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        faq = FAQ.objects.create(question=question, answer=answer)
+        faq.save()
+
+        return Response({"status": "success", "message": "FAQ created successfully.", "data": FAQSerializer(faq).data}, status=status.HTTP_201_CREATED)
+    
+    def patch(self, request, faq_id):
+        try:
+            faq = FAQ.objects.get(id=faq_id)
+        except FAQ.DoesNotExist:
+            return Response({"status": "error", "message": "FAQ not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        faq.question = request.data.get('question', faq.question)
+        faq.answer = request.data.get('answer', faq.answer)
+        faq.save()
+
+        return Response({"status": "success", "message": "FAQ updated successfully.", "data": FAQSerializer(faq).data}, status=status.HTTP_200_OK)
+    
+    def delete(self, request, faq_id):
+        try:
+            faq = FAQ.objects.get(id=faq_id)
+        except FAQ.DoesNotExist:
+            return Response({"status": "error", "message": "FAQ not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        faq.delete()
+        return Response({"status": "success", "message": "FAQ deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+class FAQDetailView(APIView):
+    def get(self, request, faq_id):
+        try:
+            faq = FAQ.objects.get(id=faq_id)
+        except FAQ.DoesNotExist:
+            return Response({"status": "error", "message": "FAQ not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = FAQSerializer(faq)
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+    
+
+
+class FeedbackCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+
+    def get(self, request):
+        feedbacks = Feedback.objects.all()
+        serializer = FeedbackSerializer(feedbacks, many=True)
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        name = request.data.get('name')
+        comments = request.data.get('comments')
+
+        if not name or not comments:
+            return Response({"status": "error", "message": "Name and Comments are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        feedback = Feedback.objects.create(name=name, comments=comments)
+        feedback.save()
+
+        return Response({"status": "success", "message": "Feedback submitted successfully.", "data": FeedbackSerializer(feedback).data}, status=status.HTTP_201_CREATED)
+    
+    def patch(self, request, feedback_id):
+        try:
+            feedback = Feedback.objects.get(id=feedback_id)
+        except Feedback.DoesNotExist:
+            return Response({"status": "error", "message": "Feedback not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        feedback.name = request.data.get('name', feedback.name)
+        feedback.comments = request.data.get('comments', feedback.comments)
+        feedback.save()
+
+        return Response({"status": "success", "message": "Feedback updated successfully.", "data": FeedbackSerializer(feedback).data}, status=status.HTTP_200_OK)
+    
+    def delete(self, request, feedback_id):
+        try:
+            feedback = Feedback.objects.get(id=feedback_id)
+        except Feedback.DoesNotExist:
+            return Response({"status": "error", "message": "Feedback not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        feedback.delete()
+        return Response({"status": "success", "message": "Feedback deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+    
+
+class FeedbackDetailView(APIView):
+    def get(self, request, feedback_id):
+        try:
+            feedback = Feedback.objects.get(id=feedback_id)
+        except Feedback.DoesNotExist:
+            return Response({"status": "error", "message": "Feedback not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = FeedbackSerializer(feedback)
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+
